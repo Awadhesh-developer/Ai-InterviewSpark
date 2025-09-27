@@ -1,0 +1,4 @@
+node_modules
+.env.local
+.env
+apps/web/.next/cache/webpack/edge-server-production/0.pack

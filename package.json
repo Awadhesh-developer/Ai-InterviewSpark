@@ -1,0 +1,86 @@
+{
+  "name": "ai-interviewspark",
+  "version": "1.0.0",
+  "description": "Advanced AI-powered mock interview platform with real-time emotional analysis",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd apps/api && npm run dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "build": "npm run build:shared && npm run build:api && npm run build:web",
+    "build:shared": "cd packages/shared && npm run build",
+    "build:api": "cd apps/api && npm run build",
+    "build:web": "cd apps/web && npm run build",
+    "test": "npm run test:api && npm run test:web",
+    "test:api": "cd apps/api && npm run test",
+    "test:web": "cd apps/web && npm run test",
+    "lint": "npm run lint:api && npm run lint:web",
+    "lint:api": "cd apps/api && npm run lint",
+    "lint:web": "cd apps/web && npm run lint",
+    "clean": "npm run clean:shared && npm run clean:api && npm run clean:web",
+    "clean:shared": "cd packages/shared && npm run clean",
+    "clean:api": "cd apps/api && npm run clean",
+    "clean:web": "cd apps/web && npm run clean",
+    "db:setup": "cd apps/api && npm run db:setup",
+    "db:reset": "cd apps/api && npm run db:reset",
+    "db:migrate": "cd apps/api && npm run db:migrate:manual",
+    "db:verify": "cd apps/api && npm run db:verify",
+    "jwt:generate": "cd apps/api && npm run jwt:generate",
+    "jwt:test": "cd apps/api && npm run jwt:test",
+    "vapid:generate": "cd apps/api && npm run vapid:generate",
+    "db:setup-connection": "cd apps/api && npm run db:setup-connection",
+    "fix:startup": "cd apps/api && npm run fix:startup",
+    "setup-env": "node scripts/setup-env.js",
+    "validate-config": "node scripts/validate-config.js",
+    "test:enhanced": "npm run test:api:enhanced && npm run test:web:enhanced",
+    "test:api:enhanced": "cd apps/api && npm run test:enhanced",
+    "test:web:enhanced": "cd apps/web && npm run test:enhanced",
+    "test:integration": "cd apps/api && npm run test:integration",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "prepare": "husky install",
+    "package": "chmod +x scripts/*.sh && ./scripts/build-all.sh",
+    "package:docker": "chmod +x scripts/*.sh && ./scripts/build-all.sh latest docker",
+    "package:desktop": "chmod +x scripts/*.sh && ./scripts/build-all.sh latest desktop",
+    "package:installer": "chmod +x scripts/*.sh && ./scripts/build-all.sh latest installer",
+    "package:cloud": "chmod +x scripts/*.sh && ./scripts/build-all.sh latest cloud"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.55.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.0",
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@radix-ui/react-checkbox": "^1.3.2",
+    "@radix-ui/react-select": "^2.2.5",
+    "axios": "^1.10.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "eslint-config-next": "^15.4.3",
+    "lucide-react": "^0.527.0",
+    "next": "^15.4.3",
+    "node-fetch": "^3.3.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.1.11"
+  }
+}

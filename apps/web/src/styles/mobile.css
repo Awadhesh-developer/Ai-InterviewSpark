@@ -1,0 +1,399 @@
+/* Mobile-specific styles for InterviewSpark */
+
+/* Touch-friendly interactions */
+@media (max-width: 1024px) {
+  /* Increase touch targets */
+  button, 
+  [role="button"], 
+  input[type="button"], 
+  input[type="submit"], 
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve form inputs on mobile */
+  input, 
+  textarea, 
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  /* Better spacing for mobile */
+  .mobile-spacing {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Mobile-optimized cards */
+  .mobile-card {
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Mobile navigation improvements */
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 50;
+  }
+
+  /* Safe area handling for devices with notches */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Mobile video player optimizations */
+  .mobile-video-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .mobile-video-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    padding: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .mobile-video-container:hover .mobile-video-controls,
+  .mobile-video-container.show-controls .mobile-video-controls {
+    transform: translateY(0);
+  }
+
+  /* Fullscreen video styles */
+  .mobile-fullscreen-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: #000;
+  }
+
+  /* Mobile-optimized buttons */
+  .mobile-button-group {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .mobile-button-group button {
+    flex: 1;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* Mobile stats grid */
+  .mobile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .mobile-stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  /* Mobile typography improvements */
+  .mobile-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-subtitle {
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 1rem;
+  }
+
+  .mobile-body {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  /* Mobile loading states */
+  .mobile-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: mobile-loading 1.5s infinite;
+  }
+
+  @keyframes mobile-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Mobile modal improvements */
+  .mobile-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .mobile-modal-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Mobile swipe gestures */
+  .mobile-swipeable {
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  /* Mobile pull-to-refresh */
+  .mobile-pull-refresh {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mobile-pull-refresh-indicator {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: top 0.3s ease;
+  }
+
+  .mobile-pull-refresh.pulling .mobile-pull-refresh-indicator {
+    top: 20px;
+  }
+
+  /* Mobile toast notifications */
+  .mobile-toast {
+    position: fixed;
+    bottom: 100px;
+    left: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .mobile-toast.show {
+    transform: translateY(0);
+  }
+
+  /* Mobile accessibility improvements */
+  .mobile-focus-visible:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .mobile-card {
+      border: 2px solid;
+    }
+    
+    button {
+      border: 2px solid;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-video-controls,
+    .mobile-toast,
+    .mobile-pull-refresh-indicator {
+      transition: none;
+    }
+    
+    .mobile-skeleton {
+      animation: none;
+      background: #f0f0f0;
+    }
+  }
+
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .mobile-nav {
+      background: rgba(0, 0, 0, 0.95);
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .mobile-card,
+    .mobile-stat-card {
+      background: #1a1a1a;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    
+    .mobile-subtitle {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .mobile-skeleton {
+      background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    }
+    
+    .mobile-modal,
+    .mobile-modal-header {
+      background: #1a1a1a;
+      color: white;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  /* Landscape orientation adjustments */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .mobile-nav {
+      display: none;
+    }
+    
+    .mobile-video-container {
+      height: 100vh;
+      border-radius: 0;
+    }
+    
+    .mobile-spacing {
+      padding: 0.5rem;
+    }
+  }
+
+  /* Very small screens (older phones) */
+  @media (max-width: 360px) {
+    .mobile-title {
+      font-size: 1.25rem;
+    }
+    
+    .mobile-spacing {
+      padding: 0.75rem;
+    }
+    
+    .mobile-stats-grid {
+      gap: 0.5rem;
+    }
+    
+    .mobile-button-group {
+      gap: 0.25rem;
+    }
+    
+    .mobile-button-group button {
+      padding: 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  /* Large phones and small tablets */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .mobile-stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .mobile-spacing {
+      padding: 1.5rem;
+    }
+  }
+}
+
+/* PWA-specific styles */
+@media (display-mode: standalone) {
+  /* Hide browser UI elements when in PWA mode */
+  .browser-only {
+    display: none !important;
+  }
+  
+  /* Add extra padding for status bar */
+  .pwa-safe-area {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+  
+  /* PWA splash screen styles */
+  .pwa-splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #3b82f6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 9999;
+  }
+  
+  .pwa-splash-logo {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 2rem;
+  }
+  
+  .pwa-splash-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  
+  .pwa-splash-subtitle {
+    font-size: 1rem;
+    opacity: 0.8;
+  }
+}

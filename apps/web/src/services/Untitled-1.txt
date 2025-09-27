@@ -1,0 +1,10 @@
+dist/
+├── interviewspark-v2.0.0-linux.tar.gz      # Self-contained installer
+├── interviewspark-v2.0.0-windows.tar.gz    # Windows installer
+├── interviewspark-v2.0.0-macos.tar.gz      # macOS installer
+├── cloud/
+│   └── interviewspark-cloud-v2.0.0.tar.gz  # Cloud deployment package
+apps/desktop/dist/
+├── InterviewSpark-2.0.0.exe                # Windows desktop app
+├── InterviewSpark-2.0.0.dmg                # macOS desktop app
+└── InterviewSpark-2.0.0.AppImage           # Linux desktop app
