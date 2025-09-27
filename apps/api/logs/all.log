@@ -1631,3 +1631,5 @@
 {"level":"info","message":"🎭 Emotional Analysis: Motivel=false, Moodme=false","timestamp":"2025-09-27 13:51:38:5138"}
 {"level":"info","message":"🔌 WebSocket: Real-time features enabled","timestamp":"2025-09-27 13:51:38:5138"}
 {"level":"info","message":"📁 Storage: AWS S3=false","timestamp":"2025-09-27 13:51:39:5139"}
+{"level":"info","message":"User logged out","timestamp":"2025-09-27 14:15:52:1552"}
+{"email":"awadhesh@depasamarine.com","level":"info","message":"User logged in successfully","timestamp":"2025-09-27 14:18:15:1815"}

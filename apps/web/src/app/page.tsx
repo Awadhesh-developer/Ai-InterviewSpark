@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -133,6 +134,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      {/** Lazy-load to keep LCP lean */}
+      {dynamic(() => import('@/components/marketing/Testimonials'), { ssr: false })()}
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 bg-card">
