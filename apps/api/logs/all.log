@@ -1617,3 +1617,17 @@
 {"durationMs":2,"level":"info","message":"Ideal answer generated","provider":"openai","timestamp":"2025-09-26 23:29:31:2931","validated":true}
 {"durationMs":1,"level":"info","message":"Ideal answer generated","provider":"openai","timestamp":"2025-09-26 23:29:37:2937","validated":true}
 {"durationMs":2,"level":"info","message":"Ideal answer generated","provider":"openai","timestamp":"2025-09-26 23:29:43:2943","validated":true}
+{"level":"info","message":"🚀 AI-InterviewSpark API server running on http://localhost:3001","timestamp":"2025-09-27 13:22:55:2255"}
+{"level":"info","message":"📊 Environment: development","timestamp":"2025-09-27 13:22:55:2255"}
+{"level":"info","message":"🔐 Authentication: JWT","timestamp":"2025-09-27 13:22:55:2255"}
+{"level":"info","message":"🤖 AI Services: OpenAI=true, Gemini=true","timestamp":"2025-09-27 13:22:55:2255"}
+{"level":"info","message":"🎭 Emotional Analysis: Motivel=false, Moodme=false","timestamp":"2025-09-27 13:22:55:2255"}
+{"level":"info","message":"🔌 WebSocket: Real-time features enabled","timestamp":"2025-09-27 13:22:55:2255"}
+{"level":"info","message":"📁 Storage: AWS S3=false","timestamp":"2025-09-27 13:22:55:2255"}
+{"level":"info","message":"🚀 AI-InterviewSpark API server running on http://localhost:3001","timestamp":"2025-09-27 13:51:38:5138"}
+{"level":"info","message":"📊 Environment: development","timestamp":"2025-09-27 13:51:38:5138"}
+{"level":"info","message":"🔐 Authentication: JWT","timestamp":"2025-09-27 13:51:38:5138"}
+{"level":"info","message":"🤖 AI Services: OpenAI=true, Gemini=true","timestamp":"2025-09-27 13:51:38:5138"}
+{"level":"info","message":"🎭 Emotional Analysis: Motivel=false, Moodme=false","timestamp":"2025-09-27 13:51:38:5138"}
+{"level":"info","message":"🔌 WebSocket: Real-time features enabled","timestamp":"2025-09-27 13:51:38:5138"}
+{"level":"info","message":"📁 Storage: AWS S3=false","timestamp":"2025-09-27 13:51:39:5139"}

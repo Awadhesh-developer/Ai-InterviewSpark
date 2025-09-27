@@ -1115,7 +1115,8 @@ export class AIInterviewService {
    */
   async getQuestionsForSession(sessionId: string): Promise<InterviewQuestion[]> {
     try {
-      const response = await fetch(`/api/interviews/sessions/${sessionId}/questions`, {
+      const apiBase = (typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') : 'http://localhost:3001')
+      const response = await fetch(`${apiBase}/api/interviews/sessions/${sessionId}/questions`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.getAuthToken()}`,
@@ -1153,7 +1154,8 @@ export class AIInterviewService {
     improvementSuggestions: string[];
   }> {
     try {
-      const response = await fetch(`/api/interviews/questions/${questionId}/feedback`, {
+      const apiBase = (typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') : 'http://localhost:3001')
+      const response = await fetch(`${apiBase}/api/interviews/questions/${questionId}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

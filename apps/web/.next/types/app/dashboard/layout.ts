@@ -1,4 +1,4 @@
-// File: C:\apps\Ai-InterviewSpark\Ai-InterviewSpark\apps\web\src\app\dashboard\layout.tsx
+// File: C:\apps\Interview\Ai-InterviewSpark\apps\web\src\app\dashboard\layout.tsx
 import * as entry from '../../../../src/app/dashboard/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
