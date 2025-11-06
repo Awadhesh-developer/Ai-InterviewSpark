@@ -224,6 +224,7 @@ The AI-InterviewSpark Team`,
   }
 
   static getPasswordResetTemplate(firstName: string, resetToken: string): EmailTemplate {
+    const webUrl = process.env.WEB_URL || 'http://localhost:3000';
     return {
       subject: 'Reset Your AI-InterviewSpark Password 🔐',
       html: `
@@ -231,18 +232,18 @@ The AI-InterviewSpark Team`,
           <h1 style="color: #2563eb;">Password Reset Request</h1>
           <p>Hi ${firstName},</p>
           <p>We received a request to reset your AI-InterviewSpark password.</p>
-          
+
           <p>Click the button below to reset your password:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:3000/auth/reset-password?token=${resetToken}" 
+            <a href="${webUrl}/auth/reset-password?token=${resetToken}"
                style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
               Reset Password
             </a>
           </div>
-          
+
           <p>This link will expire in 1 hour for security reasons.</p>
           <p>If you didn't request this password reset, please ignore this email.</p>
-          
+
           <p>The AI-InterviewSpark Team</p>
         </div>
       `,
@@ -253,10 +254,102 @@ Hi ${firstName},
 We received a request to reset your AI-InterviewSpark password.
 
 Click the link below to reset your password:
-http://localhost:3000/auth/reset-password?token=${resetToken}
+${webUrl}/auth/reset-password?token=${resetToken}
 
 This link will expire in 1 hour for security reasons.
 If you didn't request this password reset, please ignore this email.
+
+The AI-InterviewSpark Team`,
+    };
+  }
+
+  static getEmailVerificationTemplate(firstName: string, verificationToken: string): EmailTemplate {
+    const webUrl = process.env.WEB_URL || 'http://localhost:3000';
+    return {
+      subject: 'Verify Your AI-InterviewSpark Email ✉️',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2563eb;">Welcome to AI-InterviewSpark!</h1>
+          <p>Hi ${firstName},</p>
+          <p>Thank you for registering with AI-InterviewSpark. Please verify your email address to get started.</p>
+
+          <p>Click the button below to verify your email:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${webUrl}/auth/verify-email?token=${verificationToken}"
+               style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Verify Email
+            </a>
+          </div>
+
+          <p>Once verified, you'll have access to all our features:</p>
+          <ul>
+            <li>🎯 AI-powered mock interviews</li>
+            <li>📊 Real-time feedback and analytics</li>
+            <li>🎭 Emotional analysis</li>
+            <li>👥 Expert coaching sessions</li>
+          </ul>
+
+          <p>If you didn't create this account, please ignore this email.</p>
+
+          <p>The AI-InterviewSpark Team</p>
+        </div>
+      `,
+      text: `Welcome to AI-InterviewSpark!
+
+Hi ${firstName},
+
+Thank you for registering with AI-InterviewSpark. Please verify your email address to get started.
+
+Click the link below to verify your email:
+${webUrl}/auth/verify-email?token=${verificationToken}
+
+Once verified, you'll have access to all our features:
+- AI-powered mock interviews
+- Real-time feedback and analytics
+- Emotional analysis
+- Expert coaching sessions
+
+If you didn't create this account, please ignore this email.
+
+The AI-InterviewSpark Team`,
+    };
+  }
+
+  static getPasswordChangedTemplate(email: string): EmailTemplate {
+    return {
+      subject: 'Your Password Has Been Changed 🔐',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2563eb;">Password Changed Successfully</h1>
+          <p>Hi there,</p>
+          <p>Your AI-InterviewSpark password has been successfully changed.</p>
+
+          <p>If you made this change, no further action is needed.</p>
+
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; color: #92400e;"><strong>⚠️ Didn't make this change?</strong></p>
+            <p style="margin: 10px 0 0 0; color: #92400e;">If you didn't request this password change, please contact us immediately at support@interviewspark.com</p>
+          </div>
+
+          <p>Account: ${email}</p>
+          <p>Changed on: ${new Date().toLocaleString()}</p>
+
+          <p>The AI-InterviewSpark Team</p>
+        </div>
+      `,
+      text: `Password Changed Successfully
+
+Hi there,
+
+Your AI-InterviewSpark password has been successfully changed.
+
+If you made this change, no further action is needed.
+
+⚠️ Didn't make this change?
+If you didn't request this password change, please contact us immediately at support@interviewspark.com
+
+Account: ${email}
+Changed on: ${new Date().toLocaleString()}
 
 The AI-InterviewSpark Team`,
     };
@@ -311,6 +404,41 @@ The AI-InterviewSpark Team`,
     resetToken: string
   ): Promise<boolean> {
     const template = this.getPasswordResetTemplate(firstName, resetToken);
+    return this.sendEmail({
+      to: email,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
+  // Alias for sendPasswordReset to match auth route expectations
+  static async sendPasswordResetEmail(
+    email: string,
+    firstName: string,
+    resetToken: string
+  ): Promise<boolean> {
+    return this.sendPasswordReset(email, firstName, resetToken);
+  }
+
+  // Send email verification
+  static async sendVerificationEmail(
+    email: string,
+    firstName: string,
+    verificationToken: string
+  ): Promise<boolean> {
+    const template = this.getEmailVerificationTemplate(firstName, verificationToken);
+    return this.sendEmail({
+      to: email,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
+  // Send password changed confirmation
+  static async sendPasswordChangedEmail(email: string): Promise<boolean> {
+    const template = this.getPasswordChangedTemplate(email);
     return this.sendEmail({
       to: email,
       subject: template.subject,

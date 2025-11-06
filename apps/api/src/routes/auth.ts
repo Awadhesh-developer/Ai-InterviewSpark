@@ -140,11 +140,12 @@ router.post('/login', authLimiter, loginValidation, asyncHandler(async (req: Req
       data: {
         user: result.user,
         token: result.token,
+        refreshToken: result.refreshToken,
       },
     });
   } catch (error: any) {
     logger.warn('Login failed', { email, error: error.message });
-    
+
     if (error.code === 'INVALID_CREDENTIALS') {
       return res.status(401).json({
         success: false,
@@ -195,15 +196,59 @@ router.get('/me', asyncHandler(async (req: Request, res: Response) => {
   }
 }));
 
-// Refresh token (placeholder for future implementation)
-router.post('/refresh', asyncHandler(async (req: Request, res: Response) => {
-  // This would typically validate a refresh token and issue a new access token
-  // For now, we'll return an error indicating this feature is not implemented
-  
-  res.status(501).json({
-    success: false,
-    error: 'Token refresh not implemented yet',
-  });
+// Refresh token
+router.post('/refresh', [
+  body('refreshToken').notEmpty().withMessage('Refresh token is required'),
+], asyncHandler(async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation failed',
+      details: errors.array(),
+    });
+  }
+
+  const { refreshToken } = req.body;
+
+  try {
+    // Verify the refresh token
+    const { verifyToken } = await import('../middleware/auth');
+    const decoded = verifyToken(refreshToken);
+
+    // Verify it's a refresh token
+    if (!decoded || decoded.type !== 'refresh') {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid refresh token',
+      });
+    }
+
+    // Generate new access token
+    const { generateToken } = await import('../middleware/auth');
+    const newAccessToken = generateToken({
+      userId: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+    });
+
+    logger.info('Token refreshed successfully', { userId: decoded.userId });
+
+    res.json({
+      success: true,
+      message: 'Token refreshed successfully',
+      data: {
+        token: newAccessToken,
+      },
+    });
+  } catch (error: any) {
+    logger.warn('Token refresh failed', { error: error.message });
+
+    return res.status(401).json({
+      success: false,
+      error: 'Invalid or expired refresh token',
+    });
+  }
 }));
 
 // Logout (client-side token removal)
@@ -220,7 +265,7 @@ router.post('/logout', asyncHandler(async (req: Request, res: Response) => {
   });
 }));
 
-// Forgot password (placeholder)
+// Forgot password
 router.post('/forgot-password', [
   body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email address'),
 ], asyncHandler(async (req: Request, res: Response) => {
@@ -235,11 +280,24 @@ router.post('/forgot-password', [
 
   const { email } = req.body;
 
-  // This would typically:
-  // 1. Check if user exists
-  // 2. Generate password reset token
-  // 3. Send email with reset link
-  
+  try {
+    const result = await UserService.requestPasswordReset(email);
+
+    // Send email if user exists
+    if (result) {
+      const { EmailService } = await import('../services/emailService');
+      // Get user info for email
+      const user = await UserService.getUserByEmail(email);
+      if (user) {
+        await EmailService.sendPasswordResetEmail(email, user.firstName, result.token);
+      }
+    }
+  } catch (error) {
+    logger.error('Password reset error:', error);
+    // Don't reveal error to user
+  }
+
+  // Always return success (don't reveal if user exists)
   logger.info('Password reset requested', { email });
 
   res.json({
@@ -248,7 +306,7 @@ router.post('/forgot-password', [
   });
 }));
 
-// Reset password (placeholder)
+// Reset password
 router.post('/reset-password', [
   body('token').notEmpty().withMessage('Reset token is required'),
   body('password')
@@ -267,17 +325,23 @@ router.post('/reset-password', [
 
   const { token, password } = req.body;
 
-  // This would typically:
-  // 1. Validate reset token
-  // 2. Update user password
-  // 3. Invalidate reset token
-  
-  logger.info('Password reset attempted', { token: token.substring(0, 10) + '...' });
+  try {
+    await UserService.resetPassword(token, password);
 
-  res.json({
-    success: true,
-    message: 'Password has been reset successfully',
-  });
+    logger.info('Password reset successful');
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now log in with your new password.',
+    });
+  } catch (error: any) {
+    logger.warn('Password reset failed', { error: error.message });
+
+    return res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to reset password',
+    });
+  }
 }));
 
 // Change password (authenticated)
@@ -306,20 +370,26 @@ router.post('/change-password', [
 
   const { currentPassword, newPassword } = req.body;
 
-  // This would typically:
-  // 1. Verify current password
-  // 2. Update to new password
-  // 3. Invalidate existing tokens
-  
-  logger.info('Password change attempted', { userId: req.user.id });
+  try {
+    await UserService.changePassword(req.user.id, currentPassword, newPassword);
 
-  res.json({
-    success: true,
-    message: 'Password changed successfully',
-  });
+    logger.info('Password changed successfully', { userId: req.user.id });
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+    });
+  } catch (error: any) {
+    logger.warn('Password change failed', { userId: req.user.id, error: error.message });
+
+    return res.status(error.statusCode || 400).json({
+      success: false,
+      error: error.message || 'Failed to change password',
+    });
+  }
 }));
 
-// Verify email (placeholder)
+// Verify email
 router.post('/verify-email', [
   body('token').notEmpty().withMessage('Verification token is required'),
 ], asyncHandler(async (req: Request, res: Response) => {
@@ -334,16 +404,23 @@ router.post('/verify-email', [
 
   const { token } = req.body;
 
-  // This would typically:
-  // 1. Validate email verification token
-  // 2. Mark user email as verified
-  
-  logger.info('Email verification attempted', { token: token.substring(0, 10) + '...' });
+  try {
+    await UserService.verifyEmail(token);
 
-  res.json({
-    success: true,
-    message: 'Email verified successfully',
-  });
+    logger.info('Email verified successfully');
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully! You can now access all features.',
+    });
+  } catch (error: any) {
+    logger.warn('Email verification failed', { error: error.message });
+
+    return res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to verify email',
+    });
+  }
 }));
 
 export default router; 

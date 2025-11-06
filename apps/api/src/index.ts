@@ -38,17 +38,9 @@ const server = createServer(app);
 import WebSocketService from './services/websocketService';
 let websocketService: WebSocketService;
 
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}));
+// Security middleware - Enhanced security headers
+import { securityHeaders } from './middleware/security';
+app.use(helmet(securityHeaders));
 
 // CORS configuration
 app.use(cors({
