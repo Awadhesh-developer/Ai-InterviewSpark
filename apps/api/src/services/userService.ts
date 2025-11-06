@@ -58,6 +58,18 @@ export class UserService {
         })
         .returning();
 
+      // Generate verification token
+      const verificationToken = await this.generateEmailVerificationToken(newUser.id);
+
+      // Send verification email
+      try {
+        const { EmailService } = await import('./emailService');
+        await EmailService.sendVerificationEmail(newUser.email, newUser.firstName, verificationToken);
+      } catch (emailError) {
+        console.warn('Failed to send verification email:', emailError);
+        // Continue with registration even if email fails
+      }
+
       // Generate token
       const token = generateToken({
         userId: newUser.id,
@@ -116,7 +128,7 @@ export class UserService {
   }
 
   // Authenticate user login
-  static async login(email: string, password: string): Promise<{ user: UserProfile; token: string }> {
+  static async login(email: string, password: string): Promise<{ user: UserProfile; token: string; refreshToken: string }> {
     try {
       // Find user by email
       const user = await db.query.users.findFirst({
@@ -133,12 +145,20 @@ export class UserService {
         throw createError('Invalid email or password', 401);
       }
 
-      // Generate token
+      // Generate tokens
       const token = generateToken({
         userId: user.id,
         email: user.email,
         role: user.role as UserRole,
       });
+
+      const refreshToken = this.generateRefreshToken(user.id, user.email);
+
+      // Update last login
+      await db
+        .update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, user.id));
 
       // Convert to UserProfile type
       const userProfile: UserProfile = {
@@ -161,7 +181,7 @@ export class UserService {
         updatedAt: user.updatedAt,
       };
 
-      return { user: userProfile, token };
+      return { user: userProfile, token, refreshToken };
     } catch (error) {
       if (error instanceof Error && (error as any).code) {
         throw error;
@@ -203,6 +223,42 @@ export class UserService {
     } catch (error) {
       console.error('Error fetching user profile:', error);
       throw createError('Failed to fetch user profile', 500);
+    }
+  }
+
+  // Get user by email
+  static async getUserByEmail(email: string): Promise<UserProfile | null> {
+    try {
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      });
+
+      if (!user) {
+        return null;
+      }
+
+      return {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role as UserRole,
+        avatar: user.avatar || undefined,
+        bio: user.bio || undefined,
+        location: user.location || undefined,
+        timezone: user.timezone || undefined,
+        language: user.language,
+        accessibility: user.accessibility || {
+          highContrast: false,
+          screenReader: false,
+          captions: true,
+        },
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+    } catch (error) {
+      console.error('Error fetching user by email:', error);
+      throw createError('Failed to fetch user', 500);
     }
   }
 
@@ -456,6 +512,234 @@ export class UserService {
     }
   }
 
+  // Request password reset
+  static async requestPasswordReset(email: string): Promise<{ token: string } | null> {
+    try {
+      // Find user by email
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      });
+
+      // Don't reveal if user exists (security best practice)
+      if (!user) {
+        return null;
+      }
+
+      // Generate reset token (32 bytes = 64 hex characters)
+      const crypto = await import('crypto');
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Store hashed token in database
+      const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+      await db
+        .update(users)
+        .set({
+          passwordResetToken: hashedToken,
+          passwordResetExpiresAt: resetExpires,
+        })
+        .where(eq(users.id, user.id));
+
+      // Return the unhashed token to send via email
+      return { token: resetToken };
+    } catch (error) {
+      console.error('Error requesting password reset:', error);
+      throw createError('Failed to process password reset request', 500);
+    }
+  }
+
+  // Reset password with token
+  static async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    try {
+      // Validate password
+      if (!validatePassword(newPassword)) {
+        throw createError(
+          'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
+          400
+        );
+      }
+
+      // Hash the token to compare with database
+      const crypto = await import('crypto');
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+      // Find user with valid reset token
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.passwordResetToken, hashedToken),
+        ),
+      });
+
+      if (!user || !user.passwordResetExpiresAt) {
+        throw createError('Invalid or expired reset token', 400);
+      }
+
+      // Check if token is expired
+      if (new Date() > user.passwordResetExpiresAt) {
+        throw createError('Reset token has expired', 400);
+      }
+
+      // Hash new password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update password and clear reset token
+      await db
+        .update(users)
+        .set({
+          password: hashedPassword,
+          passwordResetToken: null,
+          passwordResetExpiresAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, user.id));
+
+      // Send password changed confirmation email
+      try {
+        const { EmailService } = await import('./emailService');
+        await EmailService.sendPasswordChangedEmail(user.email);
+      } catch (emailError) {
+        console.warn('Failed to send password changed email:', emailError);
+      }
+
+      return true;
+    } catch (error) {
+      if (error instanceof Error && (error as any).code) {
+        throw error;
+      }
+      console.error('Error resetting password:', error);
+      throw createError('Failed to reset password', 500);
+    }
+  }
+
+  // Generate email verification token
+  static async generateEmailVerificationToken(userId: string): Promise<string> {
+    try {
+      const crypto = await import('crypto');
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const hashedToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+
+      await db
+        .update(users)
+        .set({
+          emailVerificationToken: hashedToken,
+        })
+        .where(eq(users.id, userId));
+
+      return verificationToken;
+    } catch (error) {
+      console.error('Error generating verification token:', error);
+      throw createError('Failed to generate verification token', 500);
+    }
+  }
+
+  // Verify email with token
+  static async verifyEmail(token: string): Promise<boolean> {
+    try {
+      // Hash the token to compare with database
+      const crypto = await import('crypto');
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+      // Find user with matching verification token
+      const user = await db.query.users.findFirst({
+        where: eq(users.emailVerificationToken, hashedToken),
+      });
+
+      if (!user) {
+        throw createError('Invalid verification token', 400);
+      }
+
+      // Mark email as verified and clear token
+      await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          emailVerificationToken: null,
+          status: 'active',
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, user.id));
+
+      return true;
+    } catch (error) {
+      if (error instanceof Error && (error as any).code) {
+        throw error;
+      }
+      console.error('Error verifying email:', error);
+      throw createError('Failed to verify email', 500);
+    }
+  }
+
+  // Change password (authenticated user)
+  static async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<boolean> {
+    try {
+      // Validate new password
+      if (!validatePassword(newPassword)) {
+        throw createError(
+          'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
+          400
+        );
+      }
+
+      // Find user
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+
+      if (!user || !user.password) {
+        throw createError('User not found', 404);
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        throw createError('Current password is incorrect', 401);
+      }
+
+      // Hash new password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update password
+      await db
+        .update(users)
+        .set({
+          password: hashedPassword,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+
+      return true;
+    } catch (error) {
+      if (error instanceof Error && (error as any).code) {
+        throw error;
+      }
+      console.error('Error changing password:', error);
+      throw createError('Failed to change password', 500);
+    }
+  }
+
+  // Generate refresh token
+  static generateRefreshToken(userId: string, email: string): string {
+    const crypto = require('crypto');
+    const payload = {
+      userId,
+      email,
+      type: 'refresh',
+      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
+      jti: crypto.randomUUID(), // Unique token ID
+    };
+
+    // Note: In production, you'd want to store refresh tokens in database
+    // and implement proper token rotation
+    return generateToken(payload);
+  }
+
   // Delete user account
   static async deleteUser(userId: string): Promise<void> {
     try {
@@ -464,7 +748,7 @@ export class UserService {
       if (userExists.length === 0) {
         throw createError('User not found', 404);
       }
-      
+
       await db.delete(users).where(eq(users.id, userId));
     } catch (error) {
       console.error('Error deleting user:', error);
