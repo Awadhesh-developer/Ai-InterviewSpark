@@ -62,12 +62,22 @@ const envSchema = z.object({
   REDIS_PORT: z.string().transform(Number).default('6379'),
   REDIS_PASSWORD: z.string().optional(),
   
+  // Email Service (SMTP)
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().transform(Number).optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().email().optional(),
+
   // External Services
   SENDGRID_API_KEY: z.string().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_PHONE_NUMBER: z.string().optional(),
-  
+
+  // Frontend URL
+  WEB_URL: z.string().url().default('http://localhost:3000'),
+
   // WebSocket
   WS_PORT: z.string().transform(Number).default('3002'),
   
@@ -247,6 +257,18 @@ export const config = {
     },
   },
   
+  // Email Service
+  email: {
+    smtp: {
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS,
+      from: env.SMTP_FROM,
+      enabled: !!(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS),
+    },
+  },
+
   // External Services
   services: {
     sendgrid: {
@@ -259,6 +281,11 @@ export const config = {
       phoneNumber: env.TWILIO_PHONE_NUMBER,
       enabled: !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_PHONE_NUMBER),
     },
+  },
+
+  // Frontend
+  web: {
+    url: env.WEB_URL,
   },
   
   // WebSocket
@@ -312,5 +339,63 @@ export const isAIServiceAvailable = (service: keyof Config['ai']): boolean => {
 export const isServiceAvailable = (service: keyof Config['services']): boolean => {
   return config.services[service].enabled;
 };
+
+// Configuration status report
+export function printConfigStatus(): void {
+  console.log('\n📋 Configuration Status Report\n');
+  console.log('Environment:', config.server.nodeEnv);
+  console.log('Server Port:', config.server.port);
+  console.log('WebSocket Port:', config.websocket.port);
+
+  console.log('\n🔐 Authentication:');
+  console.log('  JWT Secrets:', '✅ Configured');
+  console.log('  Google OAuth:', config.auth.oauth.google.enabled ? '✅ Enabled' : '⚠️  Disabled');
+  console.log('  Facebook OAuth:', config.auth.oauth.facebook.enabled ? '✅ Enabled' : '⚠️  Disabled');
+  console.log('  LinkedIn OAuth:', config.auth.oauth.linkedin.enabled ? '✅ Enabled' : '⚠️  Disabled');
+
+  console.log('\n📧 Email Service:');
+  console.log('  SMTP:', config.email.smtp.enabled ? '✅ Configured' : '⚠️  Not configured (emails will not send)');
+  console.log('  SendGrid:', config.services.sendgrid.enabled ? '✅ Enabled' : '⚠️  Disabled');
+
+  console.log('\n🤖 AI Services:');
+  console.log('  OpenAI:', config.ai.openai.enabled ? '✅ Enabled' : '❌ Disabled (Required for core features)');
+  console.log('  Gemini:', config.ai.gemini.enabled ? '✅ Enabled' : '⚠️  Disabled (Fallback provider)');
+  console.log('  Perplexity:', config.ai.perplexity.enabled ? '✅ Enabled' : '⚠️  Disabled (Enhanced questions unavailable)');
+  console.log('  Motivel (Voice Emotion):', config.ai.motivel.enabled ? '✅ Enabled' : '⚠️  Disabled (Using mock data)');
+  console.log('  Moodme (Facial Emotion):', config.ai.moodme.enabled ? '✅ Enabled' : '⚠️  Disabled (Using mock data)');
+
+  console.log('\n💾 Storage & Cache:');
+  console.log('  AWS S3:', config.storage.aws.enabled ? '✅ Configured' : '⚠️  Not configured (Using local storage)');
+  console.log('  Redis:', config.redis.enabled ? '✅ Connected' : '⚠️  Not configured (Caching disabled)');
+
+  console.log('\n📱 Communication:');
+  console.log('  Twilio SMS:', config.services.twilio.enabled ? '✅ Enabled' : '⚠️  Disabled');
+
+  console.log('\n🎯 Feature Flags:');
+  console.log('  Emotional Analysis:', config.features.emotionalAnalysis ? '✅ Enabled' : '❌ Disabled');
+  console.log('  Peer Sessions:', config.features.peerSessions ? '✅ Enabled' : '❌ Disabled');
+  console.log('  Expert Sessions:', config.features.expertSessions ? '✅ Enabled' : '❌ Disabled');
+
+  // Check for critical missing configurations
+  const criticalIssues: string[] = [];
+  if (!config.ai.openai.enabled) {
+    criticalIssues.push('OpenAI API key is required for interview question generation');
+  }
+  if (!config.email.smtp.enabled && !config.services.sendgrid.enabled) {
+    criticalIssues.push('Email service not configured - password reset and verification will not work');
+  }
+
+  if (criticalIssues.length > 0) {
+    console.log('\n⚠️  Critical Configuration Issues:');
+    criticalIssues.forEach(issue => console.log('  -', issue));
+  }
+
+  console.log('\n✅ Configuration loaded successfully!\n');
+}
+
+// Auto-print status on import (only in development)
+if (config.server.isDevelopment || process.env.PRINT_CONFIG_STATUS === 'true') {
+  printConfigStatus();
+}
 
 export default config; 
